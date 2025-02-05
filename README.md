@@ -12,14 +12,14 @@ Some extra functionality I use to make neovim lsp a bit better.
 
 ```lua
 require("lazy").setup({
-    { "seblj/nvim-lsp-extras" },
+    { "seblyng/nvim-lsp-extras" },
 })
 ```
 
 ### packer.nvim
 
 ```lua
-use({ "seblj/nvim-lsp-extras" })
+use({ "seblyng/nvim-lsp-extras" })
 ```
 
 ## Setup
