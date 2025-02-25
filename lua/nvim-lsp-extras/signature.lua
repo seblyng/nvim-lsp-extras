@@ -35,16 +35,4 @@ M.setup = function(client, bufnr)
     })
 end
 
--- Hack to highlight active signature because of `open_floating_preview`
--- override I have
-local orig_hl_range = vim.hl.range
----@diagnostic disable-next-line: duplicate-set-field
-vim.hl.range = function(bufnr, ns, higroup, start, finish, opts)
-    if ns == vim.api.nvim_get_namespaces()["vim_lsp_signature_help"] then
-        return orig_hl_range(bufnr, ns, higroup, { start[1] - 1, start[2] }, { finish[1] - 1, finish[2] }, opts)
-    else
-        return orig_hl_range(bufnr, ns, higroup, start, finish, opts)
-    end
-end
-
 return M
