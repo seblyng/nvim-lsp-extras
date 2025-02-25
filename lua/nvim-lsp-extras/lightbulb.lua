@@ -14,7 +14,7 @@ end
 ---@param client vim.lsp.Client
 ---@param bufnr integer
 M.setup = function(client, bufnr)
-    if not client.supports_method("textDocument/codeAction") then
+    if not client:supports_method("textDocument/codeAction") then
         return
     end
 
@@ -31,14 +31,14 @@ M.setup = function(client, bufnr)
             end
 
             local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
-            local params = vim.lsp.util.make_range_params()
+            local params = vim.lsp.util.make_range_params(0, client.offset_encoding)
             params.context = {
                 diagnostics = vim.tbl_map(function(d)
                     return d.user_data.lsp
                 end, vim.diagnostic.get(0, { lnum = lnum })),
             }
 
-            client.request("textDocument/codeAction", params, function(_, results, ctx)
+            client:request("textDocument/codeAction", params, function(_, results, ctx)
                 if #(results and results[1] or {}) > 0 then
                     return vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
                 end

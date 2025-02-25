@@ -1,7 +1,5 @@
 local M = {}
 local config = require("nvim-lsp-extras.config")
-local popup_bufnr, popup_winnr
-
 local make_params = function(mouse, bufnr)
     local clients = vim.lsp.get_clients({ bufnr = bufnr })
     local supports = vim.iter(clients):any(function(client)
@@ -23,15 +21,6 @@ local make_params = function(mouse, bufnr)
         textDocument = vim.lsp.util.make_text_document_params(bufnr),
         position = { line = mouse.line - 1, character = col },
     }
-end
-
-local try_close_window = function(bufnr)
-    if bufnr ~= popup_bufnr and popup_winnr and vim.api.nvim_win_is_valid(popup_winnr) then
-        vim.schedule(function()
-            pcall(vim.api.nvim_win_close, popup_winnr, true)
-            popup_winnr = nil
-        end)
-    end
 end
 
 -- Disable hover when these filetypes is open in the window
@@ -62,30 +51,33 @@ M.setup = function(client)
             local mouse = vim.fn.getmousepos()
             local bufnr = vim.api.nvim_win_get_buf(mouse.winid)
 
-            try_close_window(bufnr)
-
             local params = make_params(mouse, bufnr)
             if not params then
                 return
             end
 
-            vim.lsp.buf_request(
-                bufnr,
-                "textDocument/hover",
-                params,
-                vim.lsp.with(function(_, result, ctx, c)
-                    -- Hack to get hover for split which the cursor is not in
+            local orig_req_all = vim.lsp.buf_request_all
+            -- HACK: Temporarily override `vim.lsp.buf_request_all` to support
+            -- hover with mouse. Need to set ctx.bufnr for the handle for it not
+            -- to fail hovering in a buffer where the cursor is not in
+            ---@diagnostic disable-next-line: duplicate-set-field
+            vim.lsp.buf_request_all = function(_, method, _, handler)
+                local _handler = function(results, ctx)
                     ctx.bufnr = vim.api.nvim_get_current_buf()
-                    popup_bufnr, popup_winnr = vim.lsp.handlers.hover(_, result, ctx, c)
-                    return popup_bufnr, popup_winnr
-                end, {
-                    focusable = false,
-                    relative = "mouse",
-                    border = config.get("global").border or config.get("mouse_hover").border,
-                    silent = true,
-                    close_events = { "CursorMoved", "CursorMovedI", "InsertCharPre", "FocusLost", "FocusGained" },
-                })
-            )
+                    handler(results, ctx)
+                end
+                orig_req_all(bufnr, method, params, _handler)
+            end
+
+            vim.lsp.buf.hover({
+                focusable = false,
+                relative = "mouse",
+                border = config.get("global").border or config.get("mouse_hover").border,
+                silent = true,
+                close_events = { "CursorMoved", "CursorMovedI", "InsertCharPre", "FocusLost", "FocusGained" },
+            })
+
+            vim.lsp.buf_request_all = orig_req_all
         end, 500)
         return "<MouseMove>"
     end, { expr = true })
