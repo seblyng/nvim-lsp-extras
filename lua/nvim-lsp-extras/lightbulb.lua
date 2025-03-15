@@ -32,17 +32,19 @@ M.setup = function(client, bufnr)
 
             local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
             local params = vim.lsp.util.make_range_params(0, client.offset_encoding)
+            params.context = {
+                diagnostics = vim.tbl_map(function(d)
+                    return d.user_data.lsp
+                end, vim.diagnostic.get(0, { lnum = lnum })),
+            }
+
             client:request("textDocument/codeAction", params, function(_, results, ctx)
                 if #(results and results[1] or {}) > 0 then
                     return vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
                 end
 
                 -- Only show actions if there are diagnostics
-                local diagnostics = vim.tbl_map(function(d)
-                    return d.user_data.lsp
-                end, vim.diagnostic.get(ctx.bufnr, { lnum = lnum }))
-
-                if config.get("lightbulb").diagnostic_only and #diagnostics == 0 then
+                if config.get("lightbulb").diagnostic_only and #params.context.diagnostics == 0 then
                     return vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
                 end
 
