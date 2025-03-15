@@ -39,7 +39,7 @@ M.setup = function(client, bufnr)
             }
 
             client:request("textDocument/codeAction", params, function(_, results, ctx)
-                if #(results and results[1] or {}) > 0 then
+                if not results or #results == 0 then
                     return vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
                 end
 
