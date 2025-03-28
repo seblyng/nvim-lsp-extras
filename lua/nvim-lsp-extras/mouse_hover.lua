@@ -50,6 +50,13 @@ M.setup = function(client)
             local mouse = vim.fn.getmousepos()
             local bufnr = vim.api.nvim_win_get_buf(mouse.winid)
 
+            local supports = vim.iter(vim.lsp.get_clients({ bufnr = bufnr })):any(function(c)
+                return c:supports_method("textDocument/hover")
+            end)
+            if not supports then
+                return
+            end
+
             local orig_req_all = vim.lsp.buf_request_all
             -- HACK: Temporarily override `vim.lsp.buf_request_all` to support
             -- hover with mouse. Need to set ctx.bufnr for the handle for it not
