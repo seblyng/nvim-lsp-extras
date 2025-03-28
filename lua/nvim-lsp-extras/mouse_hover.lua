@@ -73,7 +73,7 @@ M.setup = function(client)
             vim.lsp.buf.hover({
                 focusable = false,
                 relative = "mouse",
-                border = config.get("global").border or config.get("mouse_hover").border,
+                border = vim.o.winborder ~= "" and vim.o.winborder or config.get("mouse_hover").border,
                 silent = true,
                 close_events = { "CursorMoved", "CursorMovedI", "InsertCharPre", "FocusLost", "FocusGained" },
             })

@@ -21,6 +21,13 @@ local config = {}
 M.set = function(user_options)
     user_options = user_options or {}
     config = vim.tbl_extend("force", default, user_options)
+
+    -- Set the global border option for each of the modules
+    if config.global.border then
+        config.signature.border = config.global.border
+        config.mouse_hover.border = config.global.border
+    end
+
     return config
 end
 
