@@ -2,6 +2,10 @@ local M = {}
 local config = require("nvim-lsp-extras.config")
 
 M.setup = function(opts)
+    if vim.fn.has("nvim-0.11") == 0 then
+        return vim.notify("This plugin requires at least nvim 0.11", vim.log.levels.WARN, { title = "nvim-lsp-extras" })
+    end
+
     config.set(opts)
 
     for conf, _ in pairs(config.get_modules()) do

@@ -24,7 +24,7 @@ M.setup = function(client, bufnr)
 
                 if current_char == trigger_char or (current_char == " " and prev_char == trigger_char) then
                     vim.lsp.buf.signature_help({
-                        border = config.get("global").border or config.get("signature").border,
+                        border = vim.o.winborder ~= "" and vim.o.winborder or config.get("signature").border,
                         silent = true,
                         focusable = false,
                     })
@@ -33,18 +33,6 @@ M.setup = function(client, bufnr)
         end,
         desc = "Start lsp signature",
     })
-end
-
--- Hack to highlight active signature because of `open_floating_preview`
--- override I have
-local orig_hl_range = vim.hl.range
----@diagnostic disable-next-line: duplicate-set-field
-vim.hl.range = function(bufnr, ns, higroup, start, finish, opts)
-    if ns == vim.api.nvim_get_namespaces()["vim_lsp_signature_help"] then
-        return orig_hl_range(bufnr, ns, higroup, { start[1] - 1, start[2] }, { finish[1] - 1, finish[2] }, opts)
-    else
-        return orig_hl_range(bufnr, ns, higroup, start, finish, opts)
-    end
 end
 
 return M

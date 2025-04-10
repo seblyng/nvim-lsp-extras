@@ -1,10 +1,10 @@
 # nvim-lsp-extras
 
-Some extra functionality I use to make neovim lsp a bit better.
+Some extra functionality I use to make neovim LSP a bit better.
 
 ## Requirements
 
-- Neovim 0.9
+- Neovim 0.11
 
 ## Installation
 
@@ -14,12 +14,6 @@ Some extra functionality I use to make neovim lsp a bit better.
 require("lazy").setup({
     { "seblyng/nvim-lsp-extras" },
 })
-```
-
-### packer.nvim
-
-```lua
-use({ "seblyng/nvim-lsp-extras" })
 ```
 
 ## Setup
@@ -39,21 +33,5 @@ require("nvim-lsp-extras").setup({
         icon = "",
         diagnostic_only = true, -- Only lightbulb if line contains diagnostic
     },
-    treesitter_hover = {
-        highlights = {
-            ["|%S-|"] = "@text.reference",
-            ["@%S+"] = "@parameter",
-            ["^%s*(Parameters:)"] = "@text.title",
-            ["^%s*(Return:)"] = "@text.title",
-            ["^%s*(See also:)"] = "@text.title",
-            ["{%S-}"] = "@parameter",
-        },
-    },
 })
 ```
-
-## Acknowledgement
-
-Huge thanks to [`noice.nvim`](https://github.com/folke/noice.nvim) for initial
-implementation of treesitter injection in lsp hover doc. Check it out for an
-awesome UI-experience in neovim
