@@ -34,7 +34,7 @@ M.setup = function(client, bufnr)
             local params = vim.lsp.util.make_range_params(0, client.offset_encoding)
             params.context = {
                 diagnostics = vim.tbl_map(function(d)
-                    return d.user_data.lsp
+                    return d and d.user_data and d.user_data.lsp or nil
                 end, vim.diagnostic.get(0, { lnum = lnum })),
             }
 
