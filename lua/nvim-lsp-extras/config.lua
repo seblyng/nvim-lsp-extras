@@ -5,10 +5,10 @@ local default = {
         border = nil,
     },
     signature = {
-        border = "rounded",
+        border = nil,
     },
     mouse_hover = {
-        border = "rounded",
+        border = nil,
     },
     lightbulb = {
         icon = "",

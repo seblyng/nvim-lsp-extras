@@ -24,7 +24,7 @@ M.setup = function(client, bufnr)
 
                 if current_char == trigger_char or (current_char == " " and prev_char == trigger_char) then
                     vim.lsp.buf.signature_help({
-                        border = vim.o.winborder ~= "" and vim.o.winborder or config.get("signature").border,
+                        border = config.get("signature").border,
                         silent = true,
                         focusable = false,
                     })
