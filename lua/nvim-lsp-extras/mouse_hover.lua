@@ -1,22 +1,24 @@
 local M = {}
 local config = require("nvim-lsp-extras.config")
 
-local function make_position_param(bufnr, mouse, offset_encoding)
-    local line = vim.api.nvim_buf_get_lines(bufnr, mouse.line - 1, mouse.line, true)[1]
-    if not line or #line < mouse.column then
-        return { line = 0, character = 0 }
-    end
-
-    local col = vim.str_byteindex(line, offset_encoding, mouse.column, false)
-    return { line = mouse.line - 1, character = col }
-end
-
-local make_params = function(mouse, bufnr)
+local function make_params(bufnr, pos)
     ---@param client vim.lsp.Client
     return function(client)
+        local row, col = pos[1] - 1, pos[2]
+
+        local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, true)[1]
+        if not line then
+            line = ""
+        end
+
+        col = math.min(col, #line)
+
         return {
-            textDocument = vim.lsp.util.make_text_document_params(bufnr),
-            position = make_position_param(bufnr, mouse, client.offset_encoding),
+            textDocument = { uri = vim.uri_from_bufnr(bufnr) },
+            position = {
+                line = row,
+                character = vim.str_utfindex(line, client.offset_encoding, col),
+            },
         }
     end
 end
@@ -47,8 +49,16 @@ M.setup = function(client)
                     return
                 end
             end
-            local mouse = vim.fn.getmousepos()
-            local bufnr = vim.api.nvim_win_get_buf(mouse.winid)
+            local pos = vim.fn.getmousepos()
+            local bufnr = vim.api.nvim_win_get_buf(pos.winid)
+            if pos.winid == 0 then
+                return
+            end
+
+            local buf = vim.fn.winbufnr(pos.winid)
+            if buf == -1 then
+                return
+            end
 
             local supports = vim.iter(vim.lsp.get_clients({ bufnr = bufnr })):any(function(c)
                 return c:supports_method("textDocument/hover")
@@ -67,7 +77,7 @@ M.setup = function(client)
                     ctx.bufnr = vim.api.nvim_get_current_buf()
                     handler(results, ctx)
                 end
-                orig_req_all(bufnr, method, make_params(mouse, bufnr), _handler)
+                orig_req_all(bufnr, method, make_params(bufnr, { pos.line, pos.column }), _handler)
             end
 
             vim.lsp.buf.hover({
