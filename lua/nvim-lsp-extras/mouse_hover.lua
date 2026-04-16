@@ -70,11 +70,19 @@ M.setup = function(client)
             local orig_req_all = vim.lsp.buf_request_all
             -- HACK: Temporarily override `vim.lsp.buf_request_all` to support
             -- hover with mouse. Need to set ctx.bufnr for the handle for it not
-            -- to fail hovering in a buffer where the cursor is not in
+            -- to fail hovering in a buffer where the cursor is not in.
+            -- Also fake ctx.params.position to match current cursor so the
+            -- ctx_is_valid() cursor-position check in vim.lsp.buf.hover passes.
             ---@diagnostic disable-next-line: duplicate-set-field
             vim.lsp.buf_request_all = function(_, method, _, handler)
                 local _handler = function(results, ctx)
                     ctx.bufnr = vim.api.nvim_get_current_buf()
+                    local cursor = vim.api.nvim_win_get_cursor(0)
+                    ctx.params = ctx.params or {}
+                    ctx.params.position = {
+                        line = cursor[1] - 1,
+                        character = cursor[2],
+                    }
                     handler(results, ctx)
                 end
                 orig_req_all(bufnr, method, make_params(bufnr, { pos.line, pos.column }), _handler)
