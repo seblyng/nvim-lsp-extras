@@ -1,17 +1,10 @@
 local M = {}
 local config = require("nvim-lsp-extras.config")
 
-local function make_params(bufnr, pos)
+local function make_params(bufnr, pos, line)
     ---@param client vim.lsp.Client
     return function(client)
         local row, col = pos[1] - 1, pos[2]
-
-        local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, true)[1]
-        if not line then
-            line = ""
-        end
-
-        col = math.min(col, #line)
 
         return {
             textDocument = { uri = vim.uri_from_bufnr(bufnr) },
@@ -50,13 +43,18 @@ M.setup = function(client)
                 end
             end
             local pos = vim.fn.getmousepos()
-            local bufnr = vim.api.nvim_win_get_buf(pos.winid)
-            if pos.winid == 0 then
+            if pos.winid == 0 or pos.line == 0 or pos.column == 0 then
                 return
             end
+            if pos.wincol <= vim.fn.getwininfo(pos.winid)[1].textoff then
+                return
+            end
+            local bufnr = vim.api.nvim_win_get_buf(pos.winid)
 
-            local buf = vim.fn.winbufnr(pos.winid)
-            if buf == -1 then
+            -- getmousepos() reports one-based byte columns, including a column
+            -- beyond the text when the mouse is in the blank part of a line.
+            local line = vim.api.nvim_buf_get_lines(bufnr, pos.line - 1, pos.line, false)[1]
+            if not line or pos.column > #line then
                 return
             end
 
@@ -85,7 +83,7 @@ M.setup = function(client)
                     }
                     handler(results, ctx)
                 end
-                orig_req_all(bufnr, method, make_params(bufnr, { pos.line, pos.column }), _handler)
+                orig_req_all(bufnr, method, make_params(bufnr, { pos.line, pos.column - 1 }, line), _handler)
             end
 
             vim.lsp.buf.hover({
